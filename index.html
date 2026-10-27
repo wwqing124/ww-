@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>ww打你屁屁</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+
+/* 🎨 小清新马卡龙配色 */
+:root {
+  --bg: #f4f7f9;             /* 浅灰蓝背景 */
+  --panel: #ffffff;          /* 纯白面板 */
+  --card: #f0f4f8;           /* 卡片浅灰 */
+  --line: #e2e8f0;           /* 浅灰边框 */
+  --text: #334155;           /* 深灰蓝文字 */
+  --dim: #64748b;            /* 次要文字 */
+  --accent: #38bdf8;         /* 清新天蓝 */
+  --accent2: #f472b6;        /* 樱花粉 */
+  --accent-bg: rgba(56,189,248,.12); 
+  --accent2-bg: rgba(244,114,182,.12);
+}
+
+/* 樱花粉主题 */
+[data-theme="pink"] {
+  --bg: #fff0f5;             /* 浅粉背景 */
+  --panel: #ffffff;
+  --card: #fff5f8;
+  --line: #fbcfe8;
+  --text: #831843;
+  --dim: #be185d;
+  --accent: #f472b6;
+  --accent2: #fb7185;
+  --accent-bg: rgba(244,114,182,.15);
+  --accent2-bg: rgba(251,113,133,.15);
+}
+
+/* 薄荷绿主题 */
+[data-theme="green"] {
+  --bg: #f0fdf4;
+  --panel: #ffffff;
+  --card: #f4fcf6;
+  --line: #bbf7d0;
+  --text: #064e3b;
+  --dim: #047857;
+  --accent: #34d399;
+  --accent2: #6ee7b7;
+  --accent-bg: rgba(52,211,153,.15);
+  --accent2-bg: rgba(110,231,183,.15);
+}
+
+/* 极简灰主题 */
+[data-theme="gray"] {
+  --bg: #f8fafc;
+  --panel: #ffffff;
+  --card: #f1f5f9;
+  --line: #cbd5e1;
+  --text: #1e293b;
+  --dim: #64748b;
+  --accent: #94a3b8;
+  --accent2: #cbd5e1;
+  --accent-bg: rgba(148,163,184,.15);
+  --accent2-bg: rgba(203,213,225,.2);
+}
+
+html,body{height:100%;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  background:var(--bg); color:var(--text); overflow:hidden; transition: background .3s;
+  -webkit-tap-highlight-color:transparent;
+}
+#app{display:flex; height:100vh; height:100dvh; overflow:hidden;}
+
+#stage{
+  flex:1; display:flex; align-items:center; justify-content:center;
+  padding:20px; overflow:hidden; position:relative; background:var(--bg);
+}
+#cv,#resultImg{
+  max-width:100%; max-height:100%; border-radius:12px;
+  box-shadow:0 12px 40px rgba(0,0,0,.08), 0 0 0 1px var(--line);
+  display:block; background:#fff; object-fit:contain; touch-action:none;
+}
+#resultImg{display:none;}
+#hint{
+  position:absolute; bottom:12px; left:50%; transform:translateX(-50%);
+  font-size:12px; color:var(--dim); pointer-events:none; white-space:nowrap;
+  background:var(--panel); padding:4px 12px; border-radius:20px; box-shadow:0 2px 10px rgba(0,0,0,.05);
+}
+
+#panel{
+  width:350px; flex-shrink:0; background:var(--panel);
+  border-left:1px solid var(--line); overflow-y:auto; overscroll-behavior:contain;
+  transition: background .3s; padding-bottom: 20px;
+}
+#panel::-webkit-scrollbar{width:6px;}
+#panel::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
+
+#panel header{
+  padding:14px 18px;
+  border-bottom:1px solid var(--line);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+.header-left{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+/* 🌟 头像稍微改大一点点 (原来38px，现在48px) */
+.header-avatar{
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  object-fit:cover;
+  border:2px solid var(--accent);
+  box-shadow:0 4px 12px var(--accent-bg);
+  flex-shrink:0;
+  background: #fff;
+}
+
+h1{font-size:16px; font-weight:800; letter-spacing:.5px; line-height:1.2; color:var(--text);}
+h1 em{font-style:normal; background:linear-gradient(90deg,var(--accent),var(--accent2)); -webkit-background-clip:text; background-clip:text; color:transparent;}
+.theme-dots{display:flex; gap:8px; flex-shrink:0;}
+.dot{width:18px; height:18px; border-radius:50%; cursor:pointer; border:2px solid transparent; transition: 0.2s;}
+.dot.active{border-color:var(--text); transform: scale(1.1);}
+
+/* 🌟 横着的横幅改宽/变高 (原来72px，现在130px) */
+.deco-banner{
+  margin: 10px 16px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  position: relative;
+  height: 130px; 
+  box-shadow: 0 4px 15px rgba(0,0,0,.05);
+}
+.deco-banner img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 35%;
+  display: block;
+}
+
+/* 去掉了原本的黑色暗角遮罩，改成清新亮色的渐变过渡 */
+.deco-banner::after{
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 50%, rgba(255,255,255,.4));
+  pointer-events: none;
+}
+
+section{padding:16px 20px; border-bottom:1px solid var(--line);}
+h2{font-size:12px; color:var(--dim); font-weight:700; letter-spacing:1px; margin-bottom:12px; display:flex; align-items:center; gap:6px;}
+
+.file-btn,.btn{
+  display:block; width:100%; padding:12px; border-radius:12px;
+  background:var(--card); border:1px solid var(--line);
+  font-size:13px; font-weight:600; text-align:center; margin-bottom:10px;
+  transition:.2s; color:var(--text); cursor:pointer; font-family:inherit;
+}
+.file-btn:hover,.btn:hover{background:var(--line);}
+.btn:active,.file-btn:active{transform:scale(.97);}
+.btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2)); border:none; font-weight:700; color:#fff; box-shadow:0 4px 15px var(--accent-bg);}
+.btn.primary:hover{opacity:0.9;}
+.btn.danger{color:#ef4444; background:#fef2f2; border-color:#fecaca;}
+.btn:last-child{margin-bottom:0;}
+
+.row{display:flex; justify-content:space-between; align-items:baseline; font-size:12px; font-weight:600; color:var(--dim);}
+.row b{color:var(--accent); font-weight:800; font-variant-numeric:tabular-nums; font-size:14px;}
+
+input[type=range]{
+  -webkit-appearance:none; appearance:none; width:100%; height:6px;
+  border-radius:4px; background:var(--line); outline:none; margin:10px 0 4px;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none; width:20px; height:20px; border-radius:50%;
+  background:#fff; border: 3px solid var(--accent); box-shadow:0 2px 6px rgba(0,0,0,.1); cursor:pointer; transition:0.1s;
+}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15);}
+.slider-block{margin-bottom:14px;}
+.slider-block:last-child{margin-bottom:0;}
+
+.seg{display:flex; gap:8px; margin-top:10px;}
+.seg button{
+  flex:1; padding:9px; border-radius:10px; font-size:12px; font-weight:600;
+  background:var(--card); border:1px solid var(--line);
+  color:var(--dim); cursor:pointer; font-family:inherit; transition:.15s;
+}
+.seg button:hover{background:var(--line);}
+.seg button.on{background:var(--accent-bg); border-color:var(--accent); color:var(--accent); font-weight:700;}
+
+.grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:8px;}
+.chip{
+  padding:9px 0; border-radius:10px; font-size:12px; font-weight:600; text-align:center;
+  background:var(--card); border:1px solid var(--line);
+  color:var(--dim); cursor:pointer; font-family:inherit; transition:.15s;
+}
+.chip:hover{background:var(--line);}
+.chip.on{background:var(--accent2-bg); border-color:var(--accent2); color:var(--accent2); font-weight:700;}
+
+.asset-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px; }
+.asset-item {
+  aspect-ratio: 1; background: #fff; border: 1px solid var(--line); border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden;
+  transition: 0.2s; padding: 4px;
+}
+.asset-item:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 10px var(--accent-bg); }
+.asset-item img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.asset-empty { grid-column: 1/-1; text-align: center; font-size: 12px; color: var(--dim); padding: 12px; background: var(--card); border-radius: 8px; }
+
+.layer-list {
+  background: var(--card); border-radius: 10px; border: 1px solid var(--line);
+  max-height: 180px; overflow-y: auto; margin-bottom: 10px;
+}
+.layer-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 12px; font-size: 12px; font-weight: 600; border-bottom: 1px solid var(--line); cursor: pointer; transition: 0.15s;
+}
+.layer-item:last-child { border-bottom: none; }
+.layer-item:hover { background: rgba(0,0,0,0.02); }
+.layer-item.active { background: var(--accent-bg); color: var(--accent); }
+.layer-item .tools { display: flex; gap: 6px; }
+.layer-item button {
+  background: #fff; border: 1px solid var(--line); border-radius: 6px;
+  color: var(--text); padding: 3px 8px; font-size: 11px; cursor: pointer; transition: 0.2s; font-weight: 600;
+}
+.layer-item button:hover { background: var(--line); }
+.layer-item button.del { color: #ef4444; background: #fef2f2; border-color: #fecaca;}
+
+.preview-box {
+  width: 100%; height: 90px; background: #fff; border-radius: 10px; margin: 12px 0;
+  border: 2px dashed var(--line); display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+#previewCanvas { max-width: 100%; max-height: 100%; object-fit: contain; display: none;}
+
+#toast{
+  position:fixed; left:50%; bottom:30px; transform:translate(-50%,20px);
+  background:var(--panel); border:1px solid var(--accent);
+  padding:12px 24px; border-radius:30px; font-size:13px; font-weight:600;
+  opacity:0; pointer-events:none; transition:.3s; z-index:99;
+  box-shadow:0 10px 30px rgba(0,0,0,.1); white-space:pre-wrap;
+  max-width:min(88vw,460px); text-align:center; line-height:1.5; color: var(--accent);
+}
+#toast.show{opacity:1; transform:translate(-50%,0);}
+
+@media(max-width:860px){
+  #app{flex-direction:column;}
+  #stage{order:1; height:42dvh; flex:none; padding:10px;}
+  #panel{order:2; width:100%; flex:1; min-height:0; border-left:none; border-top:1px solid var(--line);}
+  #hint{display:none;}
+  .deco-banner{height:90px; margin:8px 12px;} /* 手机端稍微降低一点高度 */
+  .header-avatar{width:42px;height:42px;}
+}
+</style>
+</head>
+<body data-theme="blue">
+<div id="app">
+  <main id="stage">
+    <canvas id="cv"></canvas>
+    <img id="resultImg" alt="长按保存图片">
+    <div id="hint">💡 选中水印可拖动 · 开启橡皮擦可涂抹</div>
+  </main>
+
+  <aside id="panel">
+    <header>
+      <div class="header-left">
+        <img class="header-avatar" src="https://img.imgdd.com/c83a04ed-5654-420f-9faf-fc94e5bf56a3.png" alt="avatar">
+        <h1>ww打你<em>屁屁</em></h1>
+      </div>
+      <div class="theme-dots">
+        <div class="dot active" style="background:#38bdf8" data-t="blue"></div>
+        <div class="dot" style="background:#f472b6" data-t="pink"></div>
+        <div class="dot" style="background:#34d399" data-t="green"></div>
+        <div class="dot" style="background:#94a3b8" data-t="gray"></div>
+      </div>
+    </header>
+
+    <!-- 装饰横幅 (加宽变高) -->
+    <div class="deco-banner">
+      <img src="https://img.imgdd.com/ace8b874-f184-46f1-9c03-9429385667a5.jpg" alt="deco">
+    </div>
+
+    <section>
+      <h2>📁 上传图片</h2>
+      <label class="file-btn">上传底图<input type="file" accept="image/*" id="fileBase" hidden></label>
+      <label class="file-btn" style="margin-bottom:0">上传水印素材<input type="file" accept="image/*" id="fileWm" hidden></label>
+    </section>
+
+    <section>
+      <h2>✨ 提取与特效</h2>
+      <div class="seg" id="bgModeSeg">
+        <button data-bg="white" class="on">白底黑线</button>
+        <button data-bg="black">黑底白线</button>
+      </div>
+      <div class="slider-block" style="margin-top:14px;">
+        <div class="row"><span>线条浓度</span><b id="vStrength">55</b></div>
+        <input type="range" id="sStrength" min="10" max="100" value="55">
+      </div>
+      <div class="seg" style="margin-top:8px;">
+        <button class="chip" data-fx="blur">水印毛玻璃</button>
+        <button class="chip" data-fx="glow">柔光发光</button>
+        <button class="chip" data-fx="sparkle">细闪颗粒</button>
+      </div>
+      <div class="seg" id="toneSeg" style="margin-top:8px;">
+        <button data-tone="white" class="on">白素 · 银白</button>
+        <button data-tone="black">黑素 · 灰纹</button>
+      </div>
+      
+      <div class="preview-box">
+        <canvas id="previewCanvas"></canvas>
+      </div>
+      <button class="btn primary" id="btnSaveAsset">存入素材库</button>
+    </section>
+
+    <section>
+      <h2>🗂️ 我的水印素材库</h2>
+      <div class="asset-grid" id="assetGrid">
+        <div class="asset-empty">暂未存入素材</div>
+      </div>
+    </section>
+
+    <section>
+      <h2>📚 图层面板 (可调上下层)</h2>
+      <div class="layer-list" id="layerList">
+        <div class="asset-empty">画布中暂无图层</div>
+      </div>
+      <button class="btn danger" id="btnClearLayers">清空全部图层</button>
+    </section>
+
+    <section>
+      <h2>🎛️ 选中图层设置</h2>
+      <div id="paramPanel" style="opacity:0.4; pointer-events:none; transition:opacity 0.3s;">
+        <div class="slider-block">
+          <div class="row"><span>透明度</span><b id="vOpacity">50%</b></div>
+          <input type="range" id="sOpacity" min="2" max="100" value="50">
+        </div>
+        <div class="slider-block">
+          <div class="row"><span>缩放大小</span><b id="vScale">100%</b></div>
+          <input type="range" id="sScale" min="10" max="300" value="100">
+        </div>
+        <div class="slider-block">
+          <div class="row"><span>旋转角度</span><b id="vRot">-25°</b></div>
+          <input type="range" id="sRot" min="-180" max="180" value="-25">
+        </div>
+        
+        <div class="seg" style="margin-bottom:10px;">
+          <button class="chip" id="btnTileSelected">设为/取消斜向平铺</button>
+        </div>
+        
+        <div style="background:var(--card); border:1px solid var(--line); padding:12px; border-radius:10px; margin-top:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span style="font-size:12px; font-weight:700; color:var(--text);">🧽 局部橡皮擦</span>
+            <button class="chip" id="btnEraserMode" style="padding:5px 12px; border-radius:8px;">开启擦除</button>
+          </div>
+          <div class="row"><span>橡皮擦大小</span><b id="vEraserSize">25</b></div>
+          <input type="range" id="sEraserSize" min="5" max="100" value="25">
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>🎨 内置防盗纹理</h2>
+      <div class="slider-block">
+        <div class="row"><span>纹理不透明度</span><b id="vTexAlpha">50%</b></div>
+        <input type="range" id="sTexAlpha" min="0" max="100" value="50">
+      </div>
+      <div class="grid-3" id="texGrid">
+        <button class="chip on" data-tex="none">无纹理</button>
+        <button class="chip" data-tex="heart">矩阵爱心</button>
+        <button class="chip" data-tex="grid">细网格</button>
+        <button class="chip" data-tex="cross">十字星</button>
+        <button class="chip" data-tex="brush">斜拉丝</button>
+        <button class="chip" data-tex="noise">噪点</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>💾 导出</h2>
+      <button class="btn primary" id="btnExport">生成成品图（长按保存）</button>
+      <button class="btn" id="btnBackEdit" style="display:none;">返回继续编辑</button>
+    </section>
+  </aside>
+</div>
+<div id="toast"></div>
+
+<script>
+"use strict";
+
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const previewCanvas = document.getElementById('previewCanvas');
+const pctx = previewCanvas.getContext('2d');
+const resultImg = document.getElementById('resultImg');
+cv.width = 1000; cv.height = 1000;
+
+const supportsFilter = (() => {
+  try { const c = document.createElement('canvas').getContext('2d'); c.filter = 'blur(2px)'; return c.filter === 'blur(2px)'; } catch(e) { return false; }
+})();
+
+const S = {
+  baseCanvas: null, rawWm: null, currentExtracted: null,
+  bgMode: 'white', lineStrength: 55, tone: 'white',
+  fx: { blur: false, glow: false, sparkle: false },
+  texAlpha: 0.5, texture: 'none',
+  assets: [], 
+  layers: [], 
+  activeLayerId: null,
+  layerId: 0, assetId: 0,
+  isEraserMode: false,
+  eraserSize: 25
+};
+
+let toastTimer = null;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+document.querySelectorAll('.dot').forEach(dot => {
+  dot.addEventListener('click', () => {
+    document.querySelectorAll('.dot').forEach(d => d.classList.remove('active'));
+    dot.classList.add('active'); document.body.setAttribute('data-theme', dot.dataset.t);
+  });
+});
+
+// 纹理生成
+const texCache = {};
+function getTexture(type) {
+  if (texCache[type]) return texCache[type];
+  const c = document.createElement('canvas');
+  const x = c.getContext('2d');
+  if (type === 'grid') {
+    c.width = c.height = 40;
+    x.strokeStyle = 'rgba(150,150,150,0.4)'; x.lineWidth = 1;
+    x.strokeRect(0, 0, 40, 40);
+    x.strokeStyle = 'rgba(150,150,150,0.15)'; 
+    x.beginPath(); x.moveTo(20,0); x.lineTo(20,40); x.moveTo(0,20); x.lineTo(40,20); x.stroke();
+  } else if (type === 'brush') {
+    c.width = c.height = 200;
+    x.fillStyle = '#f0f0f0'; x.fillRect(0, 0, 200, 200);
+    for (let i = 0; i < 800; i++) {
+      x.fillStyle = `rgba(255,255,255,${Math.random()*0.6})`;
+      x.fillRect(Math.random()*200, Math.random()*200, 1, Math.random()*40+10);
+    }
+  } else if (type === 'cross') {
+    c.width = c.height = 30;
+    x.fillStyle = 'rgba(150,150,150,0.6)';
+    x.beginPath();
+    x.moveTo(15, 5); x.lineTo(17, 13); x.lineTo(25, 15); x.lineTo(17, 17); x.lineTo(15, 25);
+    x.lineTo(13, 17); x.lineTo(5, 15); x.lineTo(13, 13); x.closePath(); x.fill();
+  } else if (type === 'heart') {
+    c.width = c.height = 50;
+    x.fillStyle = 'rgba(255,192,203,0.1)'; x.fillRect(0,0,50,50);
+    x.strokeStyle = 'rgba(255,192,203,0.3)'; x.lineWidth = 1;
+    x.beginPath(); x.moveTo(0,50); x.lineTo(50,0); x.stroke();
+    x.strokeStyle = 'rgba(200,150,150,0.8)'; x.fillStyle = 'rgba(255,192,203,0.3)';
+    x.lineWidth = 1.5; x.translate(25, 28);
+    x.beginPath(); x.moveTo(0, 5);
+    x.bezierCurveTo(-12, -8, -18, -2, -18, 6); x.bezierCurveTo(-18, 16, 0, 25, 0, 25);
+    x.bezierCurveTo(0, 25, 18, 16, 18, 6); x.bezierCurveTo(18, -2, 12, -8, 0, 5);
+    x.closePath(); x.fill(); x.stroke();
+  } else if (type === 'noise') {
+    c.width = c.height = 100;
+    const id = x.createImageData(100, 100);
+    for (let i = 0; i < id.data.length; i += 4) {
+      const v = Math.random() > 0.5 ? 200 : 50;
+      id.data[i]=v; id.data[i+1]=v; id.data[i+2]=v; id.data[i+3]=Math.random()*120;
+    }
+    x.putImageData(id, 0, 0);
+  }
+  texCache[type] = ctx.createPattern(c, 'repeat'); 
+  return texCache[type];
+}
+
+function readImageFile(file, onOk, onFail) {
+  if (!file) return;
+  if (file.size === 0) { onFail('文件为空'); return; }
+  if (/\.(heic|heif)$/i.test(file.name) || file.type === 'image/heic') { onFail('HEIC格式不支持，请转JPG/PNG'); return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => onOk(img);
+    img.onerror = () => onFail('图片解码失败'); img.src = reader.result;
+  };
+  reader.onerror = () => onFail('文件读取失败'); reader.readAsDataURL(file);
+}
+
+/* 提取与特效合成 */
+function buildSprite() {
+  if (!S.rawWm) return;
+  const img = S.rawWm;
+  let w = img.naturalWidth, h = img.naturalHeight;
+  const MAX = 1000;
+  if (Math.max(w, h) > MAX) { const k = MAX/Math.max(w,h); w=Math.round(w*k); h=Math.round(h*k); }
+
+  const src = document.createElement('canvas');
+  src.width = w; src.height = h;
+  const sc = src.getContext('2d', { willReadFrequently: true });
+  sc.drawImage(img, 0, 0, w, h);
+
+  const id = sc.getImageData(0, 0, w, h);
+  const d = id.data;
+  const st = S.lineStrength / 100;
+  const gamma = 2.0 - st * 1.7;
+  const isWhiteBg = S.bgMode === 'white';
+  const tone = S.tone === 'white' ? [255, 255, 255] : [40, 40, 45];
+
+  for (let i = 0; i < d.length; i += 4) {
+    const lum = (0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2]) / 255;
+    let a = isWhiteBg ? (1 - lum) : lum;
+    a = Math.pow(Math.max(0, Math.min(1, (a - 0.05) / 0.9)), gamma);
+    d[i] = tone[0]; d[i+1] = tone[1]; d[i+2] = tone[2]; d[i+3] = Math.round(a * 255);
+  }
+  sc.putImageData(id, 0, 0);
+
+  const pad = 25;
+  const out = document.createElement('canvas');
+  out.width = w + pad*2; out.height = h + pad*2;
+  const ox = out.getContext('2d');
+
+  if (S.fx.glow && supportsFilter) {
+    ox.save(); ox.globalCompositeOperation = 'lighter';
+    ox.filter = 'blur(10px)'; ox.globalAlpha = 0.85;
+    ox.drawImage(src, pad, pad); ox.restore();
+  }
+  ox.save();
+  if (S.fx.blur && supportsFilter) ox.filter = 'blur(2px)';
+  ox.drawImage(src, pad, pad); ox.restore();
+  
+  if (S.fx.sparkle) {
+    const od = ox.getImageData(0, 0, out.width, out.height).data;
+    ox.save(); ox.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 300; i++) {
+      const px = (Math.random()*out.width)|0, py = (Math.random()*out.height)|0;
+      if (od[(py*out.width + px)*4 + 3] > 60) {
+        ox.fillStyle = `rgba(255,255,255,${Math.random()*0.8+0.2})`;
+        ox.beginPath(); ox.arc(px, py, Math.random()*1.5+0.5, 0, 6.28); ox.fill();
+      }
+    }
+    ox.restore();
+  }
+
+  S.currentExtracted = out;
+  previewCanvas.width = out.width; previewCanvas.height = out.height;
+  pctx.clearRect(0,0,out.width,out.height);
+  pctx.drawImage(out, 0, 0);
+  previewCanvas.style.display = 'block';
+}
+
+/* 渲染 */
+function render() {
+  const W = cv.width, H = cv.height;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+  ctx.clearRect(0, 0, W, H);
+
+  if (S.baseCanvas) {
+    ctx.drawImage(S.baseCanvas, 0, 0, W, H);
+    if (S.texture !== 'none' && S.texAlpha > 0) {
+      ctx.save(); ctx.globalAlpha = S.texAlpha; ctx.fillStyle = getTexture(S.texture);
+      ctx.fillRect(0, 0, W, H); ctx.restore();
+    }
+  } else {
+    ctx.fillStyle = '#f8fafc'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = '#cbd5e1'; ctx.font = '600 30px system-ui'; ctx.textAlign = 'center';
+    ctx.fillText('请先上传底图', W/2, H/2);
+  }
+
+  S.layers.forEach(L => {
+    if (!L.canvas) return;
+    if (L.type === 'single') {
+      ctx.save(); ctx.globalAlpha = L.opacity;
+      ctx.translate(L.x, L.y); ctx.rotate(L.rot * Math.PI / 180); ctx.scale(L.scale, L.scale);
+      ctx.drawImage(L.canvas, -L.canvas.width/2, -L.canvas.height/2); ctx.restore();
+    } else {
+      if (!L._cache) buildTileCache(L);
+      ctx.drawImage(L._cache, 0, 0);
+    }
+  });
+
+  const activeL = S.layers.find(l => l.id === S.activeLayerId);
+  if (activeL && activeL.type === 'single' && !dragLock && !S.isEraserMode) {
+    ctx.save();
+    ctx.translate(activeL.x, activeL.y); ctx.rotate(activeL.rot * Math.PI / 180);
+    ctx.strokeStyle = 'var(--accent)'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+    ctx.strokeRect(-activeL.canvas.width * activeL.scale / 2, -activeL.canvas.height * activeL.scale / 2, 
+                   activeL.canvas.width * activeL.scale, activeL.canvas.height * activeL.scale);
+    ctx.restore();
+  }
+}
+
+/* 无缝平铺 */
+function buildTileCache(L) {
+  const W = cv.width, H = cv.height;
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const x = c.getContext('2d');
+  const sp = L.canvas;
+  const tw = sp.width * L.scale, th = sp.height * L.scale;
+  
+  const stepX = tw * 0.98; 
+  const stepY = th * 0.98;
+  const nx = Math.ceil(W / stepX), ny = Math.ceil(H / stepY);
+  
+  x.save(); x.globalAlpha = L.opacity;
+  x.translate(W/2, H/2); x.rotate(L.rot * Math.PI / 180); x.translate(-W/2, -H/2);
+  for (let i = -ny; i <= ny; i++) {
+    for (let j = -nx; j <= nx; j++) {
+      x.drawImage(sp, W/2 + j*stepX - tw/2, H/2 + i*stepY - th/2, tw, th);
+    }
+  }
+  x.restore();
+  L._cache = c;
+}
+
+/* 素材库 */
+const assetGrid = document.getElementById('assetGrid');
+function renderAssets() {
+  assetGrid.innerHTML = '';
+  if (S.assets.length === 0) { assetGrid.innerHTML = '<div class="asset-empty">暂未存入素材</div>'; return; }
+  S.assets.forEach(A => {
+    const d = document.createElement('div');
+    d.className = 'asset-item';
+    const img = document.createElement('img'); img.src = A.thumb; d.appendChild(img);
+    d.onclick = () => { addLayer(A.canvas, A.id); toast('已从素材库添加'); };
+    assetGrid.appendChild(d);
+  });
+}
+
+document.getElementById('btnSaveAsset').addEventListener('click', () => {
+  if(!S.currentExtracted) { toast('请先提取水印'); return; }
+  const tc = document.createElement('canvas');
+  const k = Math.min(100 / S.currentExtracted.width, 100 / S.currentExtracted.height, 1);
+  tc.width = S.currentExtracted.width * k; tc.height = S.currentExtracted.height * k;
+  const tx = tc.getContext('2d'); tx.fillStyle = '#111'; tx.fillRect(0,0,tc.width,tc.height);
+  tx.drawImage(S.currentExtracted, 0, 0, tc.width, tc.height);
+
+  S.assets.push({ id: ++S.assetId, canvas: S.currentExtracted, thumb: tc.toDataURL('image/png') });
+  renderAssets(); toast('已存入素材库');
+});
+
+/* 图层 */
+const layerListEl = document.getElementById('layerList');
+const paramPanel = document.getElementById('paramPanel');
+
+function renderLayerList() {
+  layerListEl.innerHTML = '';
+  if (S.layers.length === 0) { layerListEl.innerHTML = '<div class="asset-empty">画布中暂无图层</div>'; return; }
+  S.layers.forEach((L, i) => {
+    const div = document.createElement('div');
+    div.className = 'layer-item' + (L.id === S.activeLayerId ? ' active' : '');
+    const displayIdx = S.layers.length - 1 - i;
+    div.innerHTML = `<span>图层 ${displayIdx + 1} ${L.type==='tile'?'(平铺)':''}</span>`;
+    const tools = document.createElement('div'); tools.className = 'tools';
+    
+    const upBtn = document.createElement('button'); upBtn.textContent = '↑';
+    upBtn.onclick = (e) => { e.stopPropagation(); moveLayer(i, 1); };
+    if (i === S.layers.length - 1) upBtn.disabled = true;
+    
+    const downBtn = document.createElement('button'); downBtn.textContent = '↓';
+    downBtn.onclick = (e) => { e.stopPropagation(); moveLayer(i, -1); };
+    if (i === 0) downBtn.disabled = true;
+    
+    const delBtn = document.createElement('button'); delBtn.className = 'del'; delBtn.textContent = '×';
+    delBtn.onclick = (e) => { e.stopPropagation(); deleteLayer(L.id); };
+    
+    tools.appendChild(upBtn); tools.appendChild(downBtn); tools.appendChild(delBtn);
+    div.appendChild(tools);
+    div.onclick = () => selectLayer(L.id);
+    layerListEl.appendChild(div);
+  });
+}
+
+function moveLayer(index, dir) {
+  const newIdx = index + dir; if (newIdx < 0 || newIdx >= S.layers.length) return;
+  const temp = S.layers[index]; S.layers[index] = S.layers[newIdx]; S.layers[newIdx] = temp;
+  renderLayerList(); render();
+}
+
+function cloneCanvas(oldCanvas) {
+  const newCanvas = document.createElement('canvas');
+  newCanvas.width = oldCanvas.width; newCanvas.height = oldCanvas.height;
+  newCanvas.getContext('2d').drawImage(oldCanvas, 0, 0);
+  return newCanvas;
+}
+
+function addLayer(canvasObj, assetId = -1) {
+  const id = ++S.layerId;
+  const L = { id, assetId, canvas: cloneCanvas(canvasObj), type: 'single', x: cv.width / 2, y: cv.height / 2, scale: 0.5, rot: -25, opacity: 0.5, _cache: null };
+  S.layers.push(L); selectLayer(id); render();
+}
+
+function selectLayer(id) {
+  S.activeLayerId = id;
+  const L = S.layers.find(l => l.id === id);
+  if (L) {
+    paramPanel.style.opacity = 1; paramPanel.style.pointerEvents = 'auto';
+    document.getElementById('sOpacity').value = Math.round(L.opacity * 100);
+    document.getElementById('sScale').value = Math.round(L.scale * 100);
+    document.getElementById('sRot').value = Math.round(L.rot);
+    document.getElementById('vOpacity').textContent = Math.round(L.opacity * 100) + '%';
+    document.getElementById('vScale').textContent = Math.round(L.scale * 100) + '%';
+    document.getElementById('vRot').textContent = Math.round(L.rot) + '°';
+  } else {
+    S.activeLayerId = null; paramPanel.style.opacity = 0.4; paramPanel.style.pointerEvents = 'none';
+    S.isEraserMode = false; document.getElementById('btnEraserMode').classList.remove('on');
+    document.getElementById('btnEraserMode').textContent = '开启擦除';
+    cv.style.cursor = 'grab';
+  }
+  renderLayerList(); render();
+}
+
+function deleteLayer(id) {
+  S.layers = S.layers.filter(l => l.id !== id);
+  if (S.activeLayerId === id) selectLayer(null);
+  renderLayerList(); render();
+}
+
+/* 拖拽与橡皮擦 */
+let dragLayer = null, dragStart = {x:0, y:0}, dragOffset = {x:0, y:0}, isDragging = false, dragLock = false;
+
+function getCanvasPos(e) {
+  const r = cv.getBoundingClientRect();
+  return { x: (e.clientX - r.left) * (cv.width / r.width), y: (e.clientY - r.top) * (cv.height / r.height) };
+}
+
+function getHitLayer(px, py) {
+  for (let i = S.layers.length - 1; i >= 0; i--) {
+    const L = S.layers[i]; if (L.type !== 'single') continue;
+    const dx = px - L.x, dy = py - L.y; const a = -L.rot * Math.PI / 180;
+    const lx = dx * Math.cos(a) - dy * Math.sin(a); const ly = dx * Math.sin(a) + dy * Math.cos(a);
+    if (Math.abs(lx) <= L.canvas.width * L.scale / 2 && Math.abs(ly) <= L.canvas.height * L.scale / 2) return L;
+  }
+  return null;
+}
+
+function eraseAt(L, px, py) {
+  const dx = px - L.x, dy = py - L.y;
+  const a = -L.rot * Math.PI / 180;
+  const lx = (dx * Math.cos(a) - dy * Math.sin(a)) / L.scale;
+  const ly = (dx * Math.sin(a) + dy * Math.cos(a)) / L.scale;
+  
+  const cx = lx + L.canvas.width / 2;
+  const cy = ly + L.canvas.height / 2;
+  
+  const lctx = L.canvas.getContext('2d');
+  lctx.save();
+  lctx.globalCompositeOperation = 'destination-out';
+  lctx.beginPath();
+  lctx.arc(cx, cy, S.eraserSize, 0, Math.PI * 2);
+  lctx.fill();
+  lctx.restore();
+  
+  if (L.type === 'tile') L._cache = null;
+  render();
+}
+
+cv.addEventListener('pointerdown', (e) => {
+  const p = getCanvasPos(e);
+  if (S.isEraserMode && S.activeLayerId) {
+    const L = S.layers.find(l => l.id === S.activeLayerId);
+    if (L) { eraseAt(L, p.x, p.y); isDragging = true; }
+    return;
+  }
+  const hit = getHitLayer(p.x, p.y);
+  if (hit) {
+    selectLayer(hit.id); dragLayer = hit; dragStart = { x: p.x, y: p.y }; dragOffset = { x: p.x - hit.x, y: p.y - hit.y }; isDragging = false;
+  } else { if (S.activeLayerId) selectLayer(null); }
+});
+
+cv.addEventListener('pointermove', (e) => {
+  if (S.isEraserMode && S.activeLayerId && isDragging) {
+    const p = getCanvasPos(e);
+    const L = S.layers.find(l => l.id === S.activeLayerId);
+    if (L) eraseAt(L, p.x, p.y);
+    return;
+  }
+  if (!dragLayer) return;
+  const p = getCanvasPos(e); const dx = p.x - dragStart.x, dy = p.y - dragStart.y;
+  if (!isDragging && Math.hypot(dx, dy) > 3) { isDragging = true; dragLock = true; }
+  if (isDragging) { dragLayer.x = p.x - dragOffset.x; dragLayer.y = p.y - dragOffset.y; render(); }
+});
+
+window.addEventListener('pointerup', () => { 
+  if (S.isEraserMode) { isDragging = false; return; }
+  if (isDragging) { dragLock = false; render(); } 
+  dragLayer = null; isDragging = false; 
+});
+cv.addEventListener('pointercancel', () => { 
+  dragLock = false; dragLayer = null; isDragging = false; render(); 
+});
+
+/* 橡皮擦开关 */
+document.getElementById('btnEraserMode').addEventListener('click', function() {
+  S.isEraserMode = !S.isEraserMode;
+  this.classList.toggle('on', S.isEraserMode);
+  this.textContent = S.isEraserMode ? '关闭擦除' : '开启擦除';
+  if (S.isEraserMode) { cv.style.cursor = 'crosshair'; toast('橡皮擦已开启，涂抹画布以擦除'); }
+  else { cv.style.cursor = 'grab'; }
+  render();
+});
+
+document.getElementById('sEraserSize').addEventListener('input', (e) => {
+  S.eraserSize = +e.target.value;
+  document.getElementById('vEraserSize').textContent = S.eraserSize;
+});
+
+/* UI 绑定 */
+document.getElementById('fileBase').addEventListener('change', (e) => {
+  const f = e.target.files[0]; e.target.value = '';
+  if(!f) return;
+  readImageFile(f, (img) => {
+    let w = img.naturalWidth, h = img.naturalHeight; const MAX = 1600;
+    if (Math.max(w, h) > MAX) { const k = MAX/Math.max(w,h); w=Math.round(w*k); h=Math.round(h*k); }
+    cv.width = w; cv.height = h;
+    const bc = document.createElement('canvas'); bc.width = w; bc.height = h;
+    bc.getContext('2d').drawImage(img, 0, 0, w, h);
+    S.baseCanvas = bc; S.layers.forEach(L => L._cache = null);
+    render(); toast('底图已载入');
+  }, toast);
+});
+
+document.getElementById('fileWm').addEventListener('change', (e) => {
+  const f = e.target.files[0]; e.target.value = '';
+  if(!f) return;
+  readImageFile(f, (img) => { S.rawWm = img; buildSprite(); toast('提取成功'); }, toast);
+});
+
+document.querySelectorAll('#bgModeSeg button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#bgModeSeg button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on'); S.bgMode = b.dataset.bg; buildSprite();
+  });
+});
+document.getElementById('sStrength').addEventListener('input', (e) => {
+  S.lineStrength = +e.target.value; document.getElementById('vStrength').textContent = S.lineStrength; buildSprite();
+});
+document.querySelectorAll('#toneSeg button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#toneSeg button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on'); S.tone = b.dataset.tone; buildSprite();
+  });
+});
+document.querySelectorAll('.chip[data-fx]').forEach(b => {
+  b.addEventListener('click', () => {
+    S.fx[b.dataset.fx] = !S.fx[b.dataset.fx];
+    b.classList.toggle('on', S.fx[b.dataset.fx]); buildSprite();
+  });
+});
+
+document.getElementById('sOpacity').addEventListener('input', (e) => {
+  const L = S.layers.find(l => l.id === S.activeLayerId);
+  if(L) { L.opacity = +e.target.value / 100; document.getElementById('vOpacity').textContent = e.target.value + '%'; if(L.type==='tile') L._cache=null; render(); }
+});
+document.getElementById('sScale').addEventListener('input', (e) => {
+  const L = S.layers.find(l => l.id === S.activeLayerId);
+  if(L) { L.scale = +e.target.value / 100; document.getElementById('vScale').textContent = e.target.value + '%'; if(L.type==='tile') L._cache=null; render(); }
+});
+document.getElementById('sRot').addEventListener('input', (e) => {
+  const L = S.layers.find(l => l.id === S.activeLayerId);
+  if(L) { L.rot = +e.target.value; document.getElementById('vRot').textContent = e.target.value + '°'; if(L.type==='tile') L._cache=null; render(); }
+});
+
+document.getElementById('btnTileSelected').addEventListener('click', () => {
+  const L = S.layers.find(l => l.id === S.activeLayerId);
+  if(L) { L.type = L.type === 'tile' ? 'single' : 'tile'; L._cache = null; render(); renderLayerList(); }
+});
+document.getElementById('btnClearLayers').addEventListener('click', () => { S.layers = []; selectLayer(null); render(); renderLayerList(); toast('已清空'); });
+
+document.getElementById('sTexAlpha').addEventListener('input', (e) => { S.texAlpha = +e.target.value / 100; document.getElementById('vTexAlpha').textContent = e.target.value + '%'; render(); });
+document.querySelectorAll('#texGrid .chip').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#texGrid .chip').forEach(x => x.classList.remove('on'));
+    b.classList.add('on'); S.texture = b.dataset.tex; render();
+  });
+});
+
+document.getElementById('btnExport').addEventListener('click', () => {
+  if(!S.baseCanvas) { toast('请先上传底图'); return; }
+  if (S.activeLayerId) selectLayer(null); 
+  resultImg.src = cv.toDataURL('image/png');
+  cv.style.display = 'none'; resultImg.style.display = 'block';
+  document.getElementById('btnExport').style.display = 'none';
+  document.getElementById('btnBackEdit').style.display = 'block';
+  document.getElementById('hint').textContent = '👆 长按图片保存到手机相册';
+  toast('已生成，长按图片即可保存');
+});
+document.getElementById('btnBackEdit').addEventListener('click', () => {
+  resultImg.style.display = 'none'; cv.style.display = 'block';
+  document.getElementById('btnExport').style.display = 'block';
+  document.getElementById('btnBackEdit').style.display = 'none';
+  document.getElementById('hint').textContent = '💡 选中水印可拖动 · 开启橡皮擦可涂抹';
+});
+
+render(); renderAssets();
+</script>
+</body>
+</html>
