@@ -9,58 +9,31 @@
 
 /* 🎨 小清新马卡龙配色 */
 :root {
-  --bg: #f4f7f9;             /* 浅灰蓝背景 */
-  --panel: #ffffff;          /* 纯白面板 */
-  --card: #f0f4f8;           /* 卡片浅灰 */
-  --line: #e2e8f0;           /* 浅灰边框 */
-  --text: #334155;           /* 深灰蓝文字 */
-  --dim: #64748b;            /* 次要文字 */
-  --accent: #38bdf8;         /* 清新天蓝 */
-  --accent2: #f472b6;        /* 樱花粉 */
+  --bg: #f4f7f9;             
+  --panel: #ffffff;          
+  --card: #f0f4f8;           
+  --line: #e2e8f0;           
+  --text: #334155;           
+  --dim: #64748b;            
+  --accent: #38bdf8;         
+  --accent2: #f472b6;        
   --accent-bg: rgba(56,189,248,.12); 
   --accent2-bg: rgba(244,114,182,.12);
 }
-
-/* 樱花粉主题 */
 [data-theme="pink"] {
-  --bg: #fff0f5;             /* 浅粉背景 */
-  --panel: #ffffff;
-  --card: #fff5f8;
-  --line: #fbcfe8;
-  --text: #831843;
-  --dim: #be185d;
-  --accent: #f472b6;
-  --accent2: #fb7185;
-  --accent-bg: rgba(244,114,182,.15);
-  --accent2-bg: rgba(251,113,133,.15);
+  --bg: #fff0f5; --panel: #ffffff; --card: #fff5f8; --line: #fbcfe8;
+  --text: #831843; --dim: #be185d; --accent: #f472b6; --accent2: #fb7185;
+  --accent-bg: rgba(244,114,182,.15); --accent2-bg: rgba(251,113,133,.15);
 }
-
-/* 薄荷绿主题 */
 [data-theme="green"] {
-  --bg: #f0fdf4;
-  --panel: #ffffff;
-  --card: #f4fcf6;
-  --line: #bbf7d0;
-  --text: #064e3b;
-  --dim: #047857;
-  --accent: #34d399;
-  --accent2: #6ee7b7;
-  --accent-bg: rgba(52,211,153,.15);
-  --accent2-bg: rgba(110,231,183,.15);
+  --bg: #f0fdf4; --panel: #ffffff; --card: #f4fcf6; --line: #bbf7d0;
+  --text: #064e3b; --dim: #047857; --accent: #34d399; --accent2: #6ee7b7;
+  --accent-bg: rgba(52,211,153,.15); --accent2-bg: rgba(110,231,183,.15);
 }
-
-/* 极简灰主题 */
 [data-theme="gray"] {
-  --bg: #f8fafc;
-  --panel: #ffffff;
-  --card: #f1f5f9;
-  --line: #cbd5e1;
-  --text: #1e293b;
-  --dim: #64748b;
-  --accent: #94a3b8;
-  --accent2: #cbd5e1;
-  --accent-bg: rgba(148,163,184,.15);
-  --accent2-bg: rgba(203,213,225,.2);
+  --bg: #f8fafc; --panel: #ffffff; --card: #f1f5f9; --line: #cbd5e1;
+  --text: #1e293b; --dim: #64748b; --accent: #94a3b8; --accent2: #cbd5e1;
+  --accent-bg: rgba(148,163,184,.15); --accent2-bg: rgba(203,213,225,.2);
 }
 
 html,body{height:100%;}
@@ -108,8 +81,6 @@ body{
   align-items:center;
   gap:12px;
 }
-
-/* 🌟 头像稍微改大一点点 (原来38px，现在48px) */
 .header-avatar{
   width:48px;
   height:48px;
@@ -127,7 +98,6 @@ h1 em{font-style:normal; background:linear-gradient(90deg,var(--accent),var(--ac
 .dot{width:18px; height:18px; border-radius:50%; cursor:pointer; border:2px solid transparent; transition: 0.2s;}
 .dot.active{border-color:var(--text); transform: scale(1.1);}
 
-/* 🌟 横着的横幅改宽/变高 (原来72px，现在130px) */
 .deco-banner{
   margin: 10px 16px;
   border-radius: 12px;
@@ -144,8 +114,6 @@ h1 em{font-style:normal; background:linear-gradient(90deg,var(--accent),var(--ac
   object-position: center 35%;
   display: block;
 }
-
-/* 去掉了原本的黑色暗角遮罩，改成清新亮色的渐变过渡 */
 .deco-banner::after{
   content: '';
   position: absolute;
@@ -156,6 +124,45 @@ h1 em{font-style:normal; background:linear-gradient(90deg,var(--accent),var(--ac
 
 section{padding:16px 20px; border-bottom:1px solid var(--line);}
 h2{font-size:12px; color:var(--dim); font-weight:700; letter-spacing:1px; margin-bottom:12px; display:flex; align-items:center; gap:6px;}
+
+/* 📐 新增：上传图标组 */
+.icon-group {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.icon-btn {
+  flex: 1;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.icon-btn:hover { background: var(--line); }
+.icon-btn.active {
+  background: var(--accent-bg);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.icon-btn svg {
+  width: 24px; height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.icon-btn span {
+  font-size: 11px;
+  font-weight: 700;
+}
 
 .file-btn,.btn{
   display:block; width:100%; padding:12px; border-radius:12px;
@@ -253,7 +260,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15);}
   #stage{order:1; height:42dvh; flex:none; padding:10px;}
   #panel{order:2; width:100%; flex:1; min-height:0; border-left:none; border-top:1px solid var(--line);}
   #hint{display:none;}
-  .deco-banner{height:90px; margin:8px 12px;} /* 手机端稍微降低一点高度 */
+  .deco-banner{height:90px; margin:8px 12px;}
   .header-avatar{width:42px;height:42px;}
 }
 </style>
@@ -280,14 +287,32 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15);}
       </div>
     </header>
 
-    <!-- 装饰横幅 (加宽变高) -->
     <div class="deco-banner">
       <img src="https://img.imgdd.com/ace8b874-f184-46f1-9c03-9429385667a5.jpg" alt="deco">
     </div>
 
     <section>
-      <h2>📁 上传图片</h2>
-      <label class="file-btn">上传底图<input type="file" accept="image/*" id="fileBase" hidden></label>
+      <h2>📁 上传底图</h2>
+      
+      <!-- 图标选择区 -->
+      <div class="icon-group">
+        <div class="icon-btn" data-layout="single">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+          <span>单张</span>
+        </div>
+        <div class="icon-btn" data-layout="grid2">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="18" rx="2"/><rect x="13" y="3" width="8" height="18" rx="2"/></svg>
+          <span>双拼</span>
+        </div>
+        <div class="icon-btn" data-layout="grid4">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>
+          <span>四拼</span>
+        </div>
+      </div>
+
+      <input type="file" accept="image/*" id="fileBase" hidden>
+      <input type="file" accept="image/*" multiple id="fileMulti" hidden>
+      
       <label class="file-btn" style="margin-bottom:0">上传水印素材<input type="file" accept="image/*" id="fileWm" hidden></label>
     </section>
 
@@ -489,6 +514,39 @@ function readImageFile(file, onOk, onFail) {
   };
   reader.onerror = () => onFail('文件读取失败'); reader.readAsDataURL(file);
 }
+
+/* ================= 拼图逻辑 ================= */
+function drawImageContain(c, img, x, y, w, h) {
+  const scale = Math.min(w / img.width, h / img.height);
+  const nw = img.width * scale;
+  const nh = img.height * scale;
+  const nx = x + (w - nw) / 2;
+  const ny = y + (h - nh) / 2;
+  c.drawImage(img, nx, ny, nw, nh);
+}
+
+function createGridCanvas(images, layout) {
+  const c = document.createElement('canvas');
+  const cx = c.getContext('2d');
+  
+  if (layout === 'grid2') {
+    c.width = 1600; c.height = 800;
+    cx.fillStyle = '#ffffff';
+    cx.fillRect(0, 0, c.width, c.height);
+    if (images[0]) drawImageContain(cx, images[0], 0, 0, 800, 800);
+    if (images[1]) drawImageContain(cx, images[1], 800, 0, 800, 800);
+  } else if (layout === 'grid4') {
+    c.width = 1600; c.height = 1600;
+    cx.fillStyle = '#ffffff';
+    cx.fillRect(0, 0, c.width, c.height);
+    if (images[0]) drawImageContain(cx, images[0], 0, 0, 800, 800);
+    if (images[1]) drawImageContain(cx, images[1], 800, 0, 800, 800);
+    if (images[2]) drawImageContain(cx, images[2], 0, 800, 800, 800);
+    if (images[3]) drawImageContain(cx, images[3], 800, 800, 800, 800);
+  }
+  return c;
+}
+/* ================================================= */
 
 /* 提取与特效合成 */
 function buildSprite() {
@@ -820,14 +878,67 @@ document.getElementById('fileBase').addEventListener('change', (e) => {
     const bc = document.createElement('canvas'); bc.width = w; bc.height = h;
     bc.getContext('2d').drawImage(img, 0, 0, w, h);
     S.baseCanvas = bc; S.layers.forEach(L => L._cache = null);
-    render(); toast('底图已载入');
+    render(); toast('单张底图已载入');
   }, toast);
+});
+
+// 图标点击事件
+document.querySelectorAll('.icon-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const layout = btn.dataset.layout;
+    document.querySelectorAll('.icon-btn').forEach(x => x.classList.remove('active'));
+    btn.classList.add('active');
+    
+    if (layout === 'single') {
+      document.getElementById('fileBase').click();
+    } else {
+      const fileMulti = document.getElementById('fileMulti');
+      fileMulti.setAttribute('data-layout', layout);
+      fileMulti.click();
+    }
+  });
+});
+
+// 多图读取生成拼图
+document.getElementById('fileMulti').addEventListener('change', (e) => {
+  const files = Array.from(e.target.files);
+  e.target.value = '';
+  if (files.length === 0) return;
+  
+  const layout = e.target.getAttribute('data-layout');
+  const required = layout === 'grid2' ? 2 : 4;
+  
+  if (files.length < required) {
+    toast(`请选择至少 ${required} 张图片才能拼图`);
+    return;
+  }
+  
+  toast('正在拼图...');
+  const images = [];
+  let loaded = 0;
+  
+  files.slice(0, required).forEach((file, idx) => {
+    readImageFile(file, (img) => {
+      images[idx] = img;
+      loaded++;
+      if (loaded === required) {
+        const gridCanvas = createGridCanvas(images, layout);
+        cv.width = gridCanvas.width;
+        cv.height = gridCanvas.height;
+        S.baseCanvas = gridCanvas;
+        S.layers.forEach(L => L._cache = null);
+        
+        render();
+        toast(`已成功生成 ${required} 宫格！`);
+      }
+    }, (err) => { toast(err); });
+  });
 });
 
 document.getElementById('fileWm').addEventListener('change', (e) => {
   const f = e.target.files[0]; e.target.value = '';
   if(!f) return;
-  readImageFile(f, (img) => { S.rawWm = img; buildSprite(); toast('提取成功'); }, toast);
+  readImageFile(f, (img) => { S.rawWm = img; buildSprite(); toast('水印提取成功'); }, toast);
 });
 
 document.querySelectorAll('#bgModeSeg button').forEach(b => {
