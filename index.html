@@ -48,17 +48,13 @@ body{
   flex:1; display:flex; align-items:center; justify-content:center;
   padding:20px; overflow:hidden; position:relative; background:var(--bg);
 }
+#stage.empty{cursor:pointer;}
 #cv,#resultImg{
   max-width:100%; max-height:100%; border-radius:12px;
   box-shadow:0 12px 40px rgba(0,0,0,.08), 0 0 0 1px var(--line);
   display:block; background:#fff; object-fit:contain; touch-action:none;
 }
 #resultImg{display:none;}
-#hint{
-  position:absolute; bottom:12px; left:50%; transform:translateX(-50%);
-  font-size:12px; color:var(--dim); pointer-events:none; white-space:nowrap;
-  background:var(--panel); padding:4px 12px; border-radius:20px; box-shadow:0 2px 10px rgba(0,0,0,.05);
-}
 
 #panel{
   width:350px; flex-shrink:0; background:var(--panel);
@@ -125,45 +121,6 @@ h1 em{font-style:normal; background:linear-gradient(90deg,var(--accent),var(--ac
 section{padding:16px 20px; border-bottom:1px solid var(--line);}
 h2{font-size:12px; color:var(--dim); font-weight:700; letter-spacing:1px; margin-bottom:12px; display:flex; align-items:center; gap:6px;}
 
-/* 📐 新增：上传图标组 */
-.icon-group {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-.icon-btn {
-  flex: 1;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 10px 4px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-.icon-btn:hover { background: var(--line); }
-.icon-btn.active {
-  background: var(--accent-bg);
-  border-color: var(--accent);
-  color: var(--accent);
-}
-.icon-btn svg {
-  width: 24px; height: 24px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.icon-btn span {
-  font-size: 11px;
-  font-weight: 700;
-}
-
 .file-btn,.btn{
   display:block; width:100%; padding:12px; border-radius:12px;
   background:var(--card); border:1px solid var(--line);
@@ -214,10 +171,16 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15);}
 .asset-item {
   aspect-ratio: 1; background: #fff; border: 1px solid var(--line); border-radius: 10px;
   display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden;
-  transition: 0.2s; padding: 4px;
+  transition: 0.2s; padding: 4px; position: relative;
 }
 .asset-item:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 10px var(--accent-bg); }
 .asset-item img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.asset-del {
+  position: absolute; top: 2px; right: 2px; width: 18px; height: 18px;
+  border-radius: 50%; border: none; background: rgba(239,68,68,.85); color: #fff;
+  font-size: 12px; line-height: 1; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; padding: 0; z-index: 2; font-family: inherit;
+}
 .asset-empty { grid-column: 1/-1; text-align: center; font-size: 12px; color: var(--dim); padding: 12px; background: var(--card); border-radius: 8px; }
 
 .layer-list {
@@ -259,7 +222,6 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15);}
   #app{flex-direction:column;}
   #stage{order:1; height:42dvh; flex:none; padding:10px;}
   #panel{order:2; width:100%; flex:1; min-height:0; border-left:none; border-top:1px solid var(--line);}
-  #hint{display:none;}
   .deco-banner{height:90px; margin:8px 12px;}
   .header-avatar{width:42px;height:42px;}
 }
@@ -267,10 +229,9 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15);}
 </head>
 <body data-theme="blue">
 <div id="app">
-  <main id="stage">
+  <main id="stage" class="empty">
     <canvas id="cv"></canvas>
     <img id="resultImg" alt="长按保存图片">
-    <div id="hint">💡 选中水印可拖动 · 开启橡皮擦可涂抹</div>
   </main>
 
   <aside id="panel">
@@ -292,33 +253,9 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15);}
     </div>
 
     <section>
-      <h2>📁 上传底图</h2>
-      
-      <!-- 图标选择区 -->
-      <div class="icon-group">
-        <div class="icon-btn" data-layout="single">
-          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-          <span>单张</span>
-        </div>
-        <div class="icon-btn" data-layout="grid2">
-          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="18" rx="2"/><rect x="13" y="3" width="8" height="18" rx="2"/></svg>
-          <span>双拼</span>
-        </div>
-        <div class="icon-btn" data-layout="grid4">
-          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>
-          <span>四拼</span>
-        </div>
-      </div>
-
-      <input type="file" accept="image/*" id="fileBase" hidden>
-      <input type="file" accept="image/*" multiple id="fileMulti" hidden>
-      
-      <label class="file-btn" style="margin-bottom:0">上传水印素材<input type="file" accept="image/*" id="fileWm" hidden></label>
-    </section>
-
-    <section>
       <h2>✨ 提取与特效</h2>
-      <div class="seg" id="bgModeSeg">
+      <label class="file-btn">上传水印素材<input type="file" accept="image/*" id="fileWm" hidden></label>
+      <div class="seg" id="bgModeSeg" style="margin-top:0;">
         <button data-bg="white" class="on">白底黑线</button>
         <button data-bg="black">黑底白线</button>
       </div>
@@ -339,7 +276,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15);}
       <div class="preview-box">
         <canvas id="previewCanvas"></canvas>
       </div>
-      <button class="btn primary" id="btnSaveAsset">存入素材库</button>
+      <button class="btn primary" id="btnSaveAsset">存入素材库（刷新不丢）</button>
     </section>
 
     <section>
@@ -413,6 +350,9 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15);}
 </div>
 <div id="toast"></div>
 
+<!-- 底图选择器（多选，1-4 张，直接点预览区触发） -->
+<input type="file" accept="image/*" multiple id="fileBase" hidden>
+
 <script>
 "use strict";
 
@@ -421,6 +361,7 @@ const ctx = cv.getContext('2d');
 const previewCanvas = document.getElementById('previewCanvas');
 const pctx = previewCanvas.getContext('2d');
 const resultImg = document.getElementById('resultImg');
+const stageEl = document.getElementById('stage');
 cv.width = 1000; cv.height = 1000;
 
 const supportsFilter = (() => {
@@ -428,7 +369,7 @@ const supportsFilter = (() => {
 })();
 
 const S = {
-  baseCanvas: null, rawWm: null, currentExtracted: null,
+  baseCanvas: null, baseImages: [], rawWm: null, currentExtracted: null,
   bgMode: 'white', lineStrength: 55, tone: 'white',
   fx: { blur: false, glow: false, sparkle: false },
   texAlpha: 0.5, texture: 'none',
@@ -452,6 +393,86 @@ document.querySelectorAll('.dot').forEach(dot => {
     dot.classList.add('active'); document.body.setAttribute('data-theme', dot.dataset.t);
   });
 });
+
+/* ================= IndexedDB：素材持久化 ================= */
+const DB_NAME = 'wwpp_assets_db';
+const DB_VER = 1;
+const STORE = 'assets';
+let dbAvailable = true;
+
+function idbOpen() {
+  return new Promise((resolve, reject) => {
+    if (!('indexedDB' in window)) { dbAvailable = false; return reject('浏览器不支持 IndexedDB'); }
+    const req = indexedDB.open(DB_NAME, DB_VER);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(STORE)) {
+        db.createObjectStore(STORE, { keyPath: 'id', autoIncrement: true });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => { dbAvailable = false; reject(req.error); };
+  });
+}
+
+async function idbAdd(blob, thumb) {
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    const req = tx.objectStore(STORE).add({ blob, thumb, createdAt: Date.now() });
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+    tx.oncomplete = () => db.close();
+  });
+}
+
+async function idbGetAll() {
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readonly');
+    const req = tx.objectStore(STORE).getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => reject(req.error);
+    tx.oncomplete = () => db.close();
+  });
+}
+
+async function idbDelete(id) {
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    const req = tx.objectStore(STORE).delete(id);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+    tx.oncomplete = () => db.close();
+  });
+}
+
+function blobToImage(blob) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject('素材解码失败'); };
+    img.src = url;
+  });
+}
+
+function canvasToBlob(canvas) {
+  return new Promise(resolve => {
+    if (canvas.toBlob) canvas.toBlob(resolve, 'image/png');
+    else resolve(null);
+  });
+}
+
+function imageToCanvas(img) {
+  const c = document.createElement('canvas');
+  c.width = img.naturalWidth || 1;
+  c.height = img.naturalHeight || 1;
+  c.getContext('2d').drawImage(img, 0, 0);
+  return c;
+}
+/* ========================================================= */
 
 // 纹理生成
 const texCache = {};
@@ -502,51 +523,105 @@ function getTexture(type) {
   return texCache[type];
 }
 
-function readImageFile(file, onOk, onFail) {
-  if (!file) return;
-  if (file.size === 0) { onFail('文件为空'); return; }
-  if (/\.(heic|heif)$/i.test(file.name) || file.type === 'image/heic') { onFail('HEIC格式不支持，请转JPG/PNG'); return; }
-  const reader = new FileReader();
-  reader.onload = () => {
-    const img = new Image();
-    img.onload = () => onOk(img);
-    img.onerror = () => onFail('图片解码失败'); img.src = reader.result;
-  };
-  reader.onerror = () => onFail('文件读取失败'); reader.readAsDataURL(file);
+/* ---------- 图片读取（Promise 版） ---------- */
+function loadImage(file) {
+  return new Promise((resolve, reject) => {
+    if (!file || file.size === 0) return reject('文件为空');
+    if (/\.(heic|heif)$/i.test(file.name) || file.type === 'image/heic') return reject('HEIC 不支持，请转 JPG/PNG');
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject('图片解码失败');
+      img.src = reader.result;
+    };
+    reader.onerror = () => reject('文件读取失败');
+    reader.readAsDataURL(file);
+  });
 }
 
-/* ================= 拼图逻辑 ================= */
-function drawImageContain(c, img, x, y, w, h) {
-  const scale = Math.min(w / img.width, h / img.height);
-  const nw = img.width * scale;
-  const nh = img.height * scale;
-  const nx = x + (w - nw) / 2;
-  const ny = y + (h - nh) / 2;
-  c.drawImage(img, nx, ny, nw, nh);
-}
+/* ================= 拼图逻辑（零缝隙 · 自适应 · 显示完整） ================= */
+const MAXSIDE = 1600;
 
-function createGridCanvas(images, layout) {
-  const c = document.createElement('canvas');
-  const cx = c.getContext('2d');
-  
-  if (layout === 'grid2') {
-    c.width = 1600; c.height = 800;
-    cx.fillStyle = '#ffffff';
-    cx.fillRect(0, 0, c.width, c.height);
-    if (images[0]) drawImageContain(cx, images[0], 0, 0, 800, 800);
-    if (images[1]) drawImageContain(cx, images[1], 800, 0, 800, 800);
-  } else if (layout === 'grid4') {
-    c.width = 1600; c.height = 1600;
-    cx.fillStyle = '#ffffff';
-    cx.fillRect(0, 0, c.width, c.height);
-    if (images[0]) drawImageContain(cx, images[0], 0, 0, 800, 800);
-    if (images[1]) drawImageContain(cx, images[1], 800, 0, 800, 800);
-    if (images[2]) drawImageContain(cx, images[2], 0, 800, 800, 800);
-    if (images[3]) drawImageContain(cx, images[3], 800, 800, 800, 800);
+function rebuildBase() {
+  const imgs = S.baseImages;
+  if (!imgs || !imgs.length) { S.baseCanvas = null; render(); updateStageUI(); return; }
+
+  const oldW = cv.width, oldH = cv.height;
+  const bc = document.createElement('canvas');
+  const bx = bc.getContext('2d');
+  let W, H;
+
+  if (imgs.length === 1) {
+    const iw = imgs[0].naturalWidth || 1000;
+    const ih = imgs[0].naturalHeight || 1000;
+    const k = Math.min(1, MAXSIDE / Math.max(iw, ih));
+    W = Math.max(1, Math.round(iw * k));
+    H = Math.max(1, Math.round(ih * k));
+    bc.width = W; bc.height = H;
+    bx.fillStyle = '#fff'; bx.fillRect(0, 0, W, H);
+    bx.drawImage(imgs[0], 0, 0, W, H);
+  } else {
+    const ratios = imgs.map(img => {
+      const w = img.naturalWidth || 1;
+      const h = img.naturalHeight || 1;
+      return w / h;
+    });
+
+    let cols;
+    if (imgs.length === 2) cols = [[0], [1]];
+    else if (imgs.length === 3) cols = [[0], [1, 2]];
+    else cols = [[0, 2], [1, 3]];
+
+    const inv = cols.map(col => col.reduce((s, i) => s + 1 / ratios[i], 0));
+    const wUnit = 1 + inv[0] / inv[1];
+    const hUnit = inv[0];
+    const k = Math.min(MAXSIDE / wUnit, MAXSIDE / hUnit);
+
+    W = Math.max(1, Math.round(wUnit * k));
+    H = Math.max(1, Math.round(hUnit * k));
+    bc.width = W; bc.height = H;
+    bx.fillStyle = '#fff'; bx.fillRect(0, 0, W, H);
+
+    const xMid = Math.round(W * inv[1] / (inv[0] + inv[1]));
+    const xEdges = [0, xMid, W];
+
+    cols.forEach((col, ci) => {
+      const cw = xEdges[ci + 1] - xEdges[ci];
+      if (cw <= 0) return;
+      const hs = col.map(i => cw / ratios[i]);
+      const sumH = hs.reduce((a, b) => a + b, 0) || 1;
+      const kf = H / sumH;
+      let acc = 0, yPrev = 0;
+      col.forEach((imgIdx, j) => {
+        acc += hs[j] * kf;
+        const yNext = (j === col.length - 1) ? H : Math.round(acc);
+        const ch = yNext - yPrev;
+        if (ch > 0) bx.drawImage(imgs[imgIdx], xEdges[ci], yPrev, cw, ch);
+        yPrev = yNext;
+      });
+    });
   }
-  return c;
+
+  S.baseCanvas = bc;
+  cv.width = W; cv.height = H;
+
+  if (S.layers.length && oldW > 0 && oldH > 0) {
+    const kx = W / oldW, ky = H / oldH;
+    S.layers.forEach(L => { L.x *= kx; L.y *= ky; L._cache = null; });
+  } else {
+    S.layers.forEach(L => L._cache = null);
+  }
+
+  render();
+  updateStageUI();
 }
-/* ================================================= */
+
+function updateStageUI() {
+  stageEl.classList.toggle('empty', !S.baseCanvas);
+}
+
+/* ============================================ */
 
 /* 提取与特效合成 */
 function buildSprite() {
@@ -624,9 +699,23 @@ function render() {
       ctx.fillRect(0, 0, W, H); ctx.restore();
     }
   } else {
-    ctx.fillStyle = '#f8fafc'; ctx.fillRect(0,0,W,H);
-    ctx.fillStyle = '#cbd5e1'; ctx.font = '600 30px system-ui'; ctx.textAlign = 'center';
-    ctx.fillText('请先上传底图', W/2, H/2);
+    ctx.fillStyle = '#f8fafc'; ctx.fillRect(0, 0, W, H);
+    ctx.save();
+    ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 4;
+    ctx.setLineDash([18, 14]);
+    ctx.strokeRect(34, 34, W - 68, H - 68);
+    ctx.restore();
+
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '700 90px system-ui';
+    ctx.fillText('+', W / 2, H / 2 - 70);
+    ctx.fillStyle = '#64748b';
+    ctx.font = '700 40px system-ui';
+    ctx.fillText('点击此处上传底图', W / 2, H / 2 + 40);
+    ctx.fillStyle = '#a8b4c4';
+    ctx.font = '500 26px system-ui';
+    ctx.fillText('支持 1 - 4 张，自动无缝拼合', W / 2, H / 2 + 100);
   }
 
   S.layers.forEach(L => {
@@ -645,7 +734,7 @@ function render() {
   if (activeL && activeL.type === 'single' && !dragLock && !S.isEraserMode) {
     ctx.save();
     ctx.translate(activeL.x, activeL.y); ctx.rotate(activeL.rot * Math.PI / 180);
-    ctx.strokeStyle = 'var(--accent)'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+    ctx.strokeStyle = 'rgba(56,189,248,.9)'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
     ctx.strokeRect(-activeL.canvas.width * activeL.scale / 2, -activeL.canvas.height * activeL.scale / 2, 
                    activeL.canvas.width * activeL.scale, activeL.canvas.height * activeL.scale);
     ctx.restore();
@@ -683,23 +772,79 @@ function renderAssets() {
   S.assets.forEach(A => {
     const d = document.createElement('div');
     d.className = 'asset-item';
+
     const img = document.createElement('img'); img.src = A.thumb; d.appendChild(img);
+
+    const del = document.createElement('button');
+    del.className = 'asset-del';
+    del.textContent = '×';
+    del.title = '删除素材';
+    del.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (!confirm('确定删除这个素材吗？')) return;
+      try {
+        if (A.persisted) await idbDelete(A.id);
+      } catch(err) { console.warn(err); }
+      S.assets = S.assets.filter(x => x !== A);
+      renderAssets();
+      toast('素材已删除');
+    });
+    d.appendChild(del);
+
     d.onclick = () => { addLayer(A.canvas, A.id); toast('已从素材库添加'); };
     assetGrid.appendChild(d);
   });
 }
 
-document.getElementById('btnSaveAsset').addEventListener('click', () => {
-  if(!S.currentExtracted) { toast('请先提取水印'); return; }
+document.getElementById('btnSaveAsset').addEventListener('click', async () => {
+  if (!S.currentExtracted) { toast('请先提取水印'); return; }
+
+  // 缩略图
   const tc = document.createElement('canvas');
   const k = Math.min(100 / S.currentExtracted.width, 100 / S.currentExtracted.height, 1);
-  tc.width = S.currentExtracted.width * k; tc.height = S.currentExtracted.height * k;
-  const tx = tc.getContext('2d'); tx.fillStyle = '#111'; tx.fillRect(0,0,tc.width,tc.height);
+  tc.width = Math.max(1, S.currentExtracted.width * k);
+  tc.height = Math.max(1, S.currentExtracted.height * k);
+  const tx = tc.getContext('2d');
+  tx.fillStyle = '#111'; tx.fillRect(0, 0, tc.width, tc.height);
   tx.drawImage(S.currentExtracted, 0, 0, tc.width, tc.height);
+  const thumb = tc.toDataURL('image/png');
 
-  S.assets.push({ id: ++S.assetId, canvas: S.currentExtracted, thumb: tc.toDataURL('image/png') });
-  renderAssets(); toast('已存入素材库');
+  try {
+    const blob = await canvasToBlob(S.currentExtracted);
+    if (!blob) throw new Error('无法生成图片数据');
+
+    const id = await idbAdd(blob, thumb);
+    const canvas = cloneCanvas(S.currentExtracted);
+    S.assets.push({ id, canvas, thumb, persisted: true });
+    if (id > S.assetId) S.assetId = id;
+
+    renderAssets();
+    toast('已存入素材库（刷新不丢）');
+  } catch (err) {
+    // 兜底：存储不可用时，仅本次会话有效
+    const id = ++S.assetId;
+    S.assets.push({ id, canvas: cloneCanvas(S.currentExtracted), thumb, persisted: false });
+    renderAssets();
+    toast('已存入（当前浏览器禁用了本地存储，刷新会丢失）');
+  }
 });
+
+async function loadAssetsFromDB() {
+  try {
+    const rows = await idbGetAll();
+    const list = await Promise.all(rows.map(async row => {
+      const img = await blobToImage(row.blob);
+      return { id: row.id, canvas: imageToCanvas(img), thumb: row.thumb, persisted: true };
+    }));
+    list.forEach(A => {
+      S.assets.push(A);
+      if (A.id > S.assetId) S.assetId = A.id;
+    });
+  } catch (err) {
+    console.warn('读取本地素材失败：', err);
+  }
+  renderAssets();
+}
 
 /* 图层 */
 const layerListEl = document.getElementById('layerList');
@@ -747,6 +892,7 @@ function cloneCanvas(oldCanvas) {
 }
 
 function addLayer(canvasObj, assetId = -1) {
+  if (!S.baseCanvas) { toast('请先点击预览区上传底图'); return; }
   const id = ++S.layerId;
   const L = { id, assetId, canvas: cloneCanvas(canvasObj), type: 'single', x: cv.width / 2, y: cv.height / 2, scale: 0.5, rot: -25, opacity: 0.5, _cache: null };
   S.layers.push(L); selectLayer(id); render();
@@ -780,6 +926,7 @@ function deleteLayer(id) {
 
 /* 拖拽与橡皮擦 */
 let dragLayer = null, dragStart = {x:0, y:0}, dragOffset = {x:0, y:0}, isDragging = false, dragLock = false;
+let lastHitLayer = null;
 
 function getCanvasPos(e) {
   const r = cv.getBoundingClientRect();
@@ -820,11 +967,13 @@ function eraseAt(L, px, py) {
 cv.addEventListener('pointerdown', (e) => {
   const p = getCanvasPos(e);
   if (S.isEraserMode && S.activeLayerId) {
+    lastHitLayer = null;
     const L = S.layers.find(l => l.id === S.activeLayerId);
     if (L) { eraseAt(L, p.x, p.y); isDragging = true; }
     return;
   }
   const hit = getHitLayer(p.x, p.y);
+  lastHitLayer = hit;
   if (hit) {
     selectLayer(hit.id); dragLayer = hit; dragStart = { x: p.x, y: p.y }; dragOffset = { x: p.x - hit.x, y: p.y - hit.y }; isDragging = false;
   } else { if (S.activeLayerId) selectLayer(null); }
@@ -867,80 +1016,60 @@ document.getElementById('sEraserSize').addEventListener('input', (e) => {
   document.getElementById('vEraserSize').textContent = S.eraserSize;
 });
 
-/* UI 绑定 */
-document.getElementById('fileBase').addEventListener('change', (e) => {
-  const f = e.target.files[0]; e.target.value = '';
-  if(!f) return;
-  readImageFile(f, (img) => {
-    let w = img.naturalWidth, h = img.naturalHeight; const MAX = 1600;
-    if (Math.max(w, h) > MAX) { const k = MAX/Math.max(w,h); w=Math.round(w*k); h=Math.round(h*k); }
-    cv.width = w; cv.height = h;
-    const bc = document.createElement('canvas'); bc.width = w; bc.height = h;
-    bc.getContext('2d').drawImage(img, 0, 0, w, h);
-    S.baseCanvas = bc; S.layers.forEach(L => L._cache = null);
-    render(); toast('单张底图已载入');
-  }, toast);
-});
+/* ================= 底图上传（直接在预览区点击） ================= */
+const fileBase = document.getElementById('fileBase');
 
-// 图标点击事件
-document.querySelectorAll('.icon-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const layout = btn.dataset.layout;
-    document.querySelectorAll('.icon-btn').forEach(x => x.classList.remove('active'));
-    btn.classList.add('active');
-    
-    if (layout === 'single') {
-      document.getElementById('fileBase').click();
-    } else {
-      const fileMulti = document.getElementById('fileMulti');
-      fileMulti.setAttribute('data-layout', layout);
-      fileMulti.click();
-    }
-  });
-});
+async function handleBaseFiles(fileList) {
+  const all = Array.from(fileList);
+  const files = all.slice(0, 4);
+  if (!files.length) return;
+  if (all.length > 4) toast('最多支持 4 张，已取前 4 张');
+  try {
+    const imgs = await Promise.all(files.map(loadImage));
+    S.baseImages = imgs;
+    rebuildBase();
+    if (all.length <= 4) toast(imgs.length === 1 ? '底图已载入' : `已自动无缝拼合 ${imgs.length} 张图片`);
+  } catch (err) {
+    toast(typeof err === 'string' ? err : '图片读取失败');
+  }
+}
 
-// 多图读取生成拼图
-document.getElementById('fileMulti').addEventListener('change', (e) => {
+fileBase.addEventListener('change', (e) => {
   const files = Array.from(e.target.files);
   e.target.value = '';
-  if (files.length === 0) return;
-  
-  const layout = e.target.getAttribute('data-layout');
-  const required = layout === 'grid2' ? 2 : 4;
-  
-  if (files.length < required) {
-    toast(`请选择至少 ${required} 张图片才能拼图`);
-    return;
-  }
-  
-  toast('正在拼图...');
-  const images = [];
-  let loaded = 0;
-  
-  files.slice(0, required).forEach((file, idx) => {
-    readImageFile(file, (img) => {
-      images[idx] = img;
-      loaded++;
-      if (loaded === required) {
-        const gridCanvas = createGridCanvas(images, layout);
-        cv.width = gridCanvas.width;
-        cv.height = gridCanvas.height;
-        S.baseCanvas = gridCanvas;
-        S.layers.forEach(L => L._cache = null);
-        
-        render();
-        toast(`已成功生成 ${required} 宫格！`);
-      }
-    }, (err) => { toast(err); });
-  });
+  if (files.length) handleBaseFiles(files);
 });
 
+let tapInfo = null;
+
+stageEl.addEventListener('pointerdown', (e) => {
+  if (resultImg.style.display === 'block') { tapInfo = null; return; }
+  tapInfo = { x: e.clientX, y: e.clientY, hit: !!lastHitLayer };
+});
+
+stageEl.addEventListener('pointerup', (e) => {
+  if (!tapInfo) return;
+  const dx = e.clientX - tapInfo.x, dy = e.clientY - tapInfo.y;
+  const hit = tapInfo.hit;
+  tapInfo = null;
+
+  if (hit) return;
+  if (Math.hypot(dx, dy) > 8) return;
+  if (S.isEraserMode) return;
+  if (resultImg.style.display === 'block') return;
+
+  fileBase.click();
+});
+
+/* 水印上传 */
 document.getElementById('fileWm').addEventListener('change', (e) => {
   const f = e.target.files[0]; e.target.value = '';
-  if(!f) return;
-  readImageFile(f, (img) => { S.rawWm = img; buildSprite(); toast('水印提取成功'); }, toast);
+  if (!f) return;
+  loadImage(f).then(img => { S.rawWm = img; buildSprite(); toast('水印提取成功'); })
+                .catch(err => toast(typeof err === 'string' ? err : '图片读取失败'));
 });
 
+/* UI 绑定 */
 document.querySelectorAll('#bgModeSeg button').forEach(b => {
   b.addEventListener('click', () => {
     document.querySelectorAll('#bgModeSeg button').forEach(x => x.classList.remove('on'));
@@ -991,23 +1120,24 @@ document.querySelectorAll('#texGrid .chip').forEach(b => {
 });
 
 document.getElementById('btnExport').addEventListener('click', () => {
-  if(!S.baseCanvas) { toast('请先上传底图'); return; }
+  if(!S.baseCanvas) { toast('请先点击预览区上传底图'); return; }
   if (S.activeLayerId) selectLayer(null); 
   resultImg.src = cv.toDataURL('image/png');
   cv.style.display = 'none'; resultImg.style.display = 'block';
   document.getElementById('btnExport').style.display = 'none';
   document.getElementById('btnBackEdit').style.display = 'block';
-  document.getElementById('hint').textContent = '👆 长按图片保存到手机相册';
   toast('已生成，长按图片即可保存');
 });
 document.getElementById('btnBackEdit').addEventListener('click', () => {
   resultImg.style.display = 'none'; cv.style.display = 'block';
   document.getElementById('btnExport').style.display = 'block';
   document.getElementById('btnBackEdit').style.display = 'none';
-  document.getElementById('hint').textContent = '💡 选中水印可拖动 · 开启橡皮擦可涂抹';
+  updateStageUI();
 });
 
-render(); renderAssets();
+/* 启动 */
+render(); updateStageUI();
+loadAssetsFromDB();
 </script>
 </body>
 </html>
