@@ -203,10 +203,19 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15);}
 .layer-item button.del { color: #ef4444; background: #fef2f2; border-color: #fecaca;}
 
 .preview-box {
-  width: 100%; height: 90px; background: #fff; border-radius: 10px; margin: 12px 0;
-  border: 2px dashed var(--line); display: flex; align-items: center; justify-content: center; overflow: hidden;
+  width: 100%; height: 140px; background: #fff; border-radius: 10px; margin: 12px 0;
+  border: 2px dashed var(--accent); display: flex; align-items: center; justify-content: center; overflow: hidden;
+  position: relative; cursor: crosshair;
+  /* 棋盘格背景以显示透明 */
+  background-image: linear-gradient(45deg, #f0f0f0 25%, transparent 25%), linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f0f0f0 75%), linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
 }
-#previewCanvas { max-width: 100%; max-height: 100%; object-fit: contain; display: none;}
+#previewCanvas { max-width: 100%; max-height: 100%; object-fit: contain; display: none; }
+.preview-tip {
+  position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(56,189,248,0.9);
+  color: #fff; font-size: 11px; text-align: center; padding: 4px 0; pointer-events: none;
+}
 
 #toast{
   position:fixed; left:50%; bottom:30px; transform:translate(-50%,20px);
@@ -255,28 +264,42 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15);}
     <section>
       <h2>✨ 提取与特效</h2>
       <label class="file-btn">上传水印素材<input type="file" accept="image/*" id="fileWm" hidden></label>
-      <div class="seg" id="bgModeSeg" style="margin-top:0;">
-        <button data-bg="white" class="on">白底黑线</button>
-        <button data-bg="black">黑底白线</button>
+      
+      <!-- 吸管取色面板 -->
+      <div class="preview-box" id="previewBox">
+        <canvas id="previewCanvas"></canvas>
+        <div class="preview-tip" id="previewTip" style="display:none;">👆 点击此处吸取要去掉的背景色</div>
       </div>
-      <div class="slider-block" style="margin-top:14px;">
-        <div class="row"><span>线条浓度</span><b id="vStrength">55</b></div>
-        <input type="range" id="sStrength" min="10" max="100" value="55">
+
+      <div class="row" style="margin-top:8px;">
+        <span>当前去底色</span>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <div id="colorSwatch" style="width:16px; height:16px; border-radius:4px; border:1px solid #ccc; background:#fff;"></div>
+          <b id="vBgColorHex" style="font-size:12px;">#FFFFFF</b>
+        </div>
       </div>
+
+      <div class="slider-block" style="margin-top:10px;">
+        <div class="row"><span>去底容差 (越大去得越多)</span><b id="vTolerance">30</b></div>
+        <input type="range" id="sTolerance" min="0" max="100" value="30">
+      </div>
+      <div class="slider-block">
+        <div class="row"><span>边缘平滑 (防锯齿)</span><b id="vSmooth">15</b></div>
+        <input type="range" id="sSmooth" min="1" max="50" value="15">
+      </div>
+
       <div class="seg" style="margin-top:8px;">
         <button class="chip" data-fx="blur">水印毛玻璃</button>
         <button class="chip" data-fx="glow">柔光发光</button>
         <button class="chip" data-fx="sparkle">细闪颗粒</button>
       </div>
       <div class="seg" id="toneSeg" style="margin-top:8px;">
-        <button data-tone="white" class="on">白素 · 银白</button>
-        <button data-tone="black">黑素 · 灰纹</button>
+        <button data-tone="white">纯白</button>
+        <button data-tone="black">纯黑</button>
+        <button data-tone="original" class="on">保留原色</button>
       </div>
       
-      <div class="preview-box">
-        <canvas id="previewCanvas"></canvas>
-      </div>
-      <button class="btn primary" id="btnSaveAsset">存入素材库（刷新不丢）</button>
+      <button class="btn primary" id="btnSaveAsset" style="margin-top:12px;">存入素材库（刷新不丢）</button>
     </section>
 
     <section>
@@ -360,6 +383,7 @@ const cv = document.getElementById('cv');
 const ctx = cv.getContext('2d');
 const previewCanvas = document.getElementById('previewCanvas');
 const pctx = previewCanvas.getContext('2d');
+const previewBox = document.getElementById('previewBox');
 const resultImg = document.getElementById('resultImg');
 const stageEl = document.getElementById('stage');
 cv.width = 1000; cv.height = 1000;
@@ -370,7 +394,10 @@ const supportsFilter = (() => {
 
 const S = {
   baseCanvas: null, baseImages: [], rawWm: null, currentExtracted: null,
-  bgMode: 'white', lineStrength: 55, tone: 'white',
+  bgColor: { r: 255, g: 255, b: 255 }, // 默认去纯白
+  tolerance: 30, // 容差 0-100
+  smooth: 15, // 平滑 1-50
+  tone: 'original',
   fx: { blur: false, glow: false, sparkle: false },
   texAlpha: 0.5, texture: 'none',
   assets: [], 
@@ -540,7 +567,7 @@ function loadImage(file) {
   });
 }
 
-/* ================= 拼图逻辑（零缝隙 · 自适应 · 显示完整） ================= */
+/* ================= 拼图逻辑 ================= */
 const MAXSIDE = 1600;
 
 function rebuildBase() {
@@ -623,46 +650,68 @@ function updateStageUI() {
 
 /* ============================================ */
 
-/* 提取与特效合成 */
+/* 核心提取算法：吸色抠图 */
 function buildSprite() {
   if (!S.rawWm) return;
   const img = S.rawWm;
   let w = img.naturalWidth, h = img.naturalHeight;
-  const MAX = 1000;
+  const MAX = 800;
   if (Math.max(w, h) > MAX) { const k = MAX/Math.max(w,h); w=Math.round(w*k); h=Math.round(h*k); }
 
   const src = document.createElement('canvas');
   src.width = w; src.height = h;
   const sc = src.getContext('2d', { willReadFrequently: true });
+  sc.clearRect(0,0,w,h);
   sc.drawImage(img, 0, 0, w, h);
 
   const id = sc.getImageData(0, 0, w, h);
   const d = id.data;
-  const st = S.lineStrength / 100;
-  const gamma = 2.0 - st * 1.7;
-  const isWhiteBg = S.bgMode === 'white';
-  const tone = S.tone === 'white' ? [255, 255, 255] : [40, 40, 45];
+  
+  const br = S.bgColor.r, bg = S.bgColor.g, bb = S.bgColor.b;
+  const tol = S.tolerance * 2.55; // 映射到 0-255
+  const sm = S.smooth * 2.55; 
+  const tone = S.tone;
 
   for (let i = 0; i < d.length; i += 4) {
-    const lum = (0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2]) / 255;
-    let a = isWhiteBg ? (1 - lum) : lum;
-    a = Math.pow(Math.max(0, Math.min(1, (a - 0.05) / 0.9)), gamma);
-    d[i] = tone[0]; d[i+1] = tone[1]; d[i+2] = tone[2]; d[i+3] = Math.round(a * 255);
+    let r = d[i], g = d[i+1], b = d[i+2], a = d[i+3];
+    if (a < 10) { d[i+3] = 0; continue; }
+
+    // 计算当前像素与目标背景色的距离 (欧几里得距离)
+    const dist = Math.sqrt(Math.pow(r - br, 2) + Math.pow(g - bg, 2) + Math.pow(b - bb, 2));
+    
+    let newAlpha = 1;
+    if (dist < tol) {
+      newAlpha = 0; // 完全透明
+    } else if (dist < tol + sm) {
+      // 平滑过渡带
+      newAlpha = (dist - tol) / sm;
+    }
+
+    newAlpha = newAlpha * (a / 255);
+
+    // 应用色调
+    if (tone === 'white') {
+      d[i] = 255; d[i+1] = 255; d[i+2] = 255;
+    } else if (tone === 'black') {
+      d[i] = 30; d[i+1] = 30; d[i+2] = 30;
+    } 
+
+    d[i+3] = Math.round(newAlpha * 255);
   }
   sc.putImageData(id, 0, 0);
 
-  const pad = 25;
+  const pad = 10;
   const out = document.createElement('canvas');
   out.width = w + pad*2; out.height = h + pad*2;
   const ox = out.getContext('2d');
 
   if (S.fx.glow && supportsFilter) {
     ox.save(); ox.globalCompositeOperation = 'lighter';
-    ox.filter = 'blur(10px)'; ox.globalAlpha = 0.85;
+    ox.filter = 'blur(8px)'; ox.globalAlpha = 0.85;
     ox.drawImage(src, pad, pad); ox.restore();
   }
   ox.save();
-  if (S.fx.blur && supportsFilter) ox.filter = 'blur(2px)';
+  if (S.fx.blur && supportsFilter) ox.filter = 'blur(1.5px)';
   ox.drawImage(src, pad, pad); ox.restore();
   
   if (S.fx.sparkle) {
@@ -679,13 +728,45 @@ function buildSprite() {
   }
 
   S.currentExtracted = out;
+  
+  // 更新预览
   previewCanvas.width = out.width; previewCanvas.height = out.height;
   pctx.clearRect(0,0,out.width,out.height);
   pctx.drawImage(out, 0, 0);
   previewCanvas.style.display = 'block';
 }
 
-/* 渲染 */
+// 点击预览图吸色
+previewBox.addEventListener('pointerdown', (e) => {
+  if (!S.rawWm) return;
+  const r = previewCanvas.getBoundingClientRect();
+  // 计算点击位置在 canvas 上的真实像素坐标
+  const x = Math.floor((e.clientX - r.left) * (previewCanvas.width / r.width));
+  const y = Math.floor((e.clientY - r.top) * (previewCanvas.height / r.height));
+
+  if (x < 0 || x >= previewCanvas.width || y < 0 || y >= previewCanvas.height) return;
+
+  // 因为是带 padding 的，需要减去 padding (buildSprite 里 pad=10)
+  // 且要注意缩放，这里偷懒直接读 currentExtracted 的像素
+  const id = pctx.getImageData(x, y, 1, 1).data;
+  
+  if (id[3] < 10) { 
+    toast('吸取到了透明区域，请点击有颜色的背景部分');
+    return; 
+  }
+
+  S.bgColor = { r: id[0], g: id[1], b: id[2] };
+  
+  // 更新 UI 颜色显示
+  const hex = '#' + ((1 << 24) + (id[0] << 16) + (id[1] << 8) + id[2]).toString(16).slice(1).toUpperCase();
+  document.getElementById('colorSwatch').style.background = hex;
+  document.getElementById('vBgColorHex').textContent = hex;
+  
+  buildSprite();
+  toast('已吸取背景色，可调节下方容差');
+});
+
+/* 渲染底图 */
 function render() {
   const W = cv.width, H = cv.height;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -1065,19 +1146,20 @@ stageEl.addEventListener('pointerup', (e) => {
 document.getElementById('fileWm').addEventListener('change', (e) => {
   const f = e.target.files[0]; e.target.value = '';
   if (!f) return;
-  loadImage(f).then(img => { S.rawWm = img; buildSprite(); toast('水印提取成功'); })
-                .catch(err => toast(typeof err === 'string' ? err : '图片读取失败'));
+  loadImage(f).then(img => { 
+    S.rawWm = img; 
+    document.getElementById('previewTip').style.display = 'block';
+    buildSprite(); 
+    toast('请点击下方预览图中的背景进行吸色'); 
+  }).catch(err => toast(typeof err === 'string' ? err : '图片读取失败'));
 });
 
 /* UI 绑定 */
-document.querySelectorAll('#bgModeSeg button').forEach(b => {
-  b.addEventListener('click', () => {
-    document.querySelectorAll('#bgModeSeg button').forEach(x => x.classList.remove('on'));
-    b.classList.add('on'); S.bgMode = b.dataset.bg; buildSprite();
-  });
+document.getElementById('sTolerance').addEventListener('input', (e) => {
+  S.tolerance = +e.target.value; document.getElementById('vTolerance').textContent = S.tolerance; buildSprite();
 });
-document.getElementById('sStrength').addEventListener('input', (e) => {
-  S.lineStrength = +e.target.value; document.getElementById('vStrength').textContent = S.lineStrength; buildSprite();
+document.getElementById('sSmooth').addEventListener('input', (e) => {
+  S.smooth = +e.target.value; document.getElementById('vSmooth').textContent = S.smooth; buildSprite();
 });
 document.querySelectorAll('#toneSeg button').forEach(b => {
   b.addEventListener('click', () => {
