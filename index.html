@@ -227,12 +227,46 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15);}
 }
 #toast.show{opacity:1; transform:translate(-50%,0);}
 
+/* 📱 手机端布局重构 */
 @media(max-width:860px){
   #app{flex-direction:column;}
-  #stage{order:1; height:42dvh; flex:none; padding:10px;}
-  #panel{order:2; width:100%; flex:1; min-height:0; border-left:none; border-top:1px solid var(--line);}
-  .deco-banner{height:90px; margin:8px 12px;}
-  .header-avatar{width:42px;height:42px;}
+  /* 画布区：大幅加长，留出更多视觉空间 */
+  #stage{
+    order:1; height:62dvh; flex:none; padding:4px; /* 高度占比拉大，边距缩小 */
+  }
+  #cv,#resultImg {
+    border-radius: 8px; /* 手机端圆角稍微小一点 */
+  }
+  /* 控制面板：变窄，内部元素紧凑 */
+  #panel{
+    order:2; width:100%; flex:1; min-height:0; border-left:none; border-top:1px solid var(--line);
+    padding-bottom: 10px;
+  }
+  /* 隐藏装饰横幅，给操作区省空间 */
+  .deco-banner{display: none;} 
+  #panel header { padding: 8px 12px; }
+  .header-avatar{width:32px;height:32px;}
+  h1{font-size:14px;}
+  
+  section{padding: 10px 12px;} /* 缩小各区块的内边距 */
+  h2{font-size: 11px; margin-bottom: 8px;}
+  
+  .file-btn,.btn{ padding: 8px; margin-bottom: 8px; font-size: 12px; border-radius: 8px;}
+  .slider-block{margin-bottom: 8px;}
+  input[type=range]{margin: 6px 0 2px; height: 4px;}
+  input[type=range]::-webkit-slider-thumb{width:16px; height:16px; border-width: 2px;}
+  
+  .seg{ margin-top: 6px; gap: 6px;}
+  .seg button, .chip { padding: 6px 4px; font-size: 11px; border-radius: 8px;}
+  
+  .preview-box{ height: 110px; margin: 8px 0;}
+  
+  /* 素材库：格子不变宽，间距缩小 */
+  .asset-grid { gap: 6px; margin-bottom: 8px;}
+  .asset-item { padding: 2px;}
+  
+  .layer-list { max-height: 100px; margin-bottom: 8px;}
+  .layer-item { padding: 8px 10px; font-size: 11px;}
 }
 </style>
 </head>
@@ -268,7 +302,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15);}
       <!-- 吸管取色面板 -->
       <div class="preview-box" id="previewBox">
         <canvas id="previewCanvas"></canvas>
-        <div class="preview-tip" id="previewTip" style="display:none;">👆 点击此处吸取要去掉的背景色</div>
+        <div class="preview-tip" id="previewTip" style="display:none;">👆 点这里吸背景色</div>
       </div>
 
       <div class="row" style="margin-top:8px;">
@@ -280,26 +314,26 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15);}
       </div>
 
       <div class="slider-block" style="margin-top:10px;">
-        <div class="row"><span>去底容差 (越大去得越多)</span><b id="vTolerance">30</b></div>
+        <div class="row"><span>去底容差</span><b id="vTolerance">30</b></div>
         <input type="range" id="sTolerance" min="0" max="100" value="30">
       </div>
       <div class="slider-block">
-        <div class="row"><span>边缘平滑 (防锯齿)</span><b id="vSmooth">15</b></div>
+        <div class="row"><span>边缘平滑</span><b id="vSmooth">15</b></div>
         <input type="range" id="sSmooth" min="1" max="50" value="15">
       </div>
 
       <div class="seg" style="margin-top:8px;">
-        <button class="chip" data-fx="blur">水印毛玻璃</button>
-        <button class="chip" data-fx="glow">柔光发光</button>
-        <button class="chip" data-fx="sparkle">细闪颗粒</button>
+        <button class="chip" data-fx="blur">毛玻璃</button>
+        <button class="chip" data-fx="glow">发光</button>
+        <button class="chip" data-fx="sparkle">细闪</button>
       </div>
       <div class="seg" id="toneSeg" style="margin-top:8px;">
         <button data-tone="white">纯白</button>
         <button data-tone="black">纯黑</button>
-        <button data-tone="original" class="on">保留原色</button>
+        <button data-tone="original" class="on">原色</button>
       </div>
       
-      <button class="btn primary" id="btnSaveAsset" style="margin-top:12px;">存入素材库（刷新不丢）</button>
+      <button class="btn primary" id="btnSaveAsset" style="margin-top:12px;">存入素材库</button>
     </section>
 
     <section>
@@ -310,7 +344,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15);}
     </section>
 
     <section>
-      <h2>📚 图层面板 (可调上下层)</h2>
+      <h2>📚 图层面板</h2>
       <div class="layer-list" id="layerList">
         <div class="asset-empty">画布中暂无图层</div>
       </div>
@@ -394,9 +428,9 @@ const supportsFilter = (() => {
 
 const S = {
   baseCanvas: null, baseImages: [], rawWm: null, currentExtracted: null,
-  bgColor: { r: 255, g: 255, b: 255 }, // 默认去纯白
-  tolerance: 30, // 容差 0-100
-  smooth: 15, // 平滑 1-50
+  bgColor: { r: 255, g: 255, b: 255 }, 
+  tolerance: 30, 
+  smooth: 15, 
   tone: 'original',
   fx: { blur: false, glow: false, sparkle: false },
   texAlpha: 0.5, texture: 'none',
@@ -668,7 +702,7 @@ function buildSprite() {
   const d = id.data;
   
   const br = S.bgColor.r, bg = S.bgColor.g, bb = S.bgColor.b;
-  const tol = S.tolerance * 2.55; // 映射到 0-255
+  const tol = S.tolerance * 2.55; 
   const sm = S.smooth * 2.55; 
   const tone = S.tone;
 
@@ -676,20 +710,17 @@ function buildSprite() {
     let r = d[i], g = d[i+1], b = d[i+2], a = d[i+3];
     if (a < 10) { d[i+3] = 0; continue; }
 
-    // 计算当前像素与目标背景色的距离 (欧几里得距离)
     const dist = Math.sqrt(Math.pow(r - br, 2) + Math.pow(g - bg, 2) + Math.pow(b - bb, 2));
     
     let newAlpha = 1;
     if (dist < tol) {
-      newAlpha = 0; // 完全透明
+      newAlpha = 0; 
     } else if (dist < tol + sm) {
-      // 平滑过渡带
       newAlpha = (dist - tol) / sm;
     }
 
     newAlpha = newAlpha * (a / 255);
 
-    // 应用色调
     if (tone === 'white') {
       d[i] = 255; d[i+1] = 255; d[i+2] = 255;
     } else if (tone === 'black') {
@@ -729,7 +760,6 @@ function buildSprite() {
 
   S.currentExtracted = out;
   
-  // 更新预览
   previewCanvas.width = out.width; previewCanvas.height = out.height;
   pctx.clearRect(0,0,out.width,out.height);
   pctx.drawImage(out, 0, 0);
@@ -740,14 +770,11 @@ function buildSprite() {
 previewBox.addEventListener('pointerdown', (e) => {
   if (!S.rawWm) return;
   const r = previewCanvas.getBoundingClientRect();
-  // 计算点击位置在 canvas 上的真实像素坐标
   const x = Math.floor((e.clientX - r.left) * (previewCanvas.width / r.width));
   const y = Math.floor((e.clientY - r.top) * (previewCanvas.height / r.height));
 
   if (x < 0 || x >= previewCanvas.width || y < 0 || y >= previewCanvas.height) return;
 
-  // 因为是带 padding 的，需要减去 padding (buildSprite 里 pad=10)
-  // 且要注意缩放，这里偷懒直接读 currentExtracted 的像素
   const id = pctx.getImageData(x, y, 1, 1).data;
   
   if (id[3] < 10) { 
@@ -757,7 +784,6 @@ previewBox.addEventListener('pointerdown', (e) => {
 
   S.bgColor = { r: id[0], g: id[1], b: id[2] };
   
-  // 更新 UI 颜色显示
   const hex = '#' + ((1 << 24) + (id[0] << 16) + (id[1] << 8) + id[2]).toString(16).slice(1).toUpperCase();
   document.getElementById('colorSwatch').style.background = hex;
   document.getElementById('vBgColorHex').textContent = hex;
@@ -880,7 +906,6 @@ function renderAssets() {
 document.getElementById('btnSaveAsset').addEventListener('click', async () => {
   if (!S.currentExtracted) { toast('请先提取水印'); return; }
 
-  // 缩略图
   const tc = document.createElement('canvas');
   const k = Math.min(100 / S.currentExtracted.width, 100 / S.currentExtracted.height, 1);
   tc.width = Math.max(1, S.currentExtracted.width * k);
@@ -902,7 +927,6 @@ document.getElementById('btnSaveAsset').addEventListener('click', async () => {
     renderAssets();
     toast('已存入素材库（刷新不丢）');
   } catch (err) {
-    // 兜底：存储不可用时，仅本次会话有效
     const id = ++S.assetId;
     S.assets.push({ id, canvas: cloneCanvas(S.currentExtracted), thumb, persisted: false });
     renderAssets();
@@ -1097,7 +1121,7 @@ document.getElementById('sEraserSize').addEventListener('input', (e) => {
   document.getElementById('vEraserSize').textContent = S.eraserSize;
 });
 
-/* ================= 底图上传（直接在预览区点击） ================= */
+/* ================= 底图上传 ================= */
 const fileBase = document.getElementById('fileBase');
 
 async function handleBaseFiles(fileList) {
